@@ -1,0 +1,41 @@
+  - name: HAProxy Request 1
+    uri:
+      url: http://localhost/
+      return_content: yes
+    register: foo
+  - debug: msg='{{ foo.content }}'
+  
+  - name: HAProxy Request 2
+    uri:
+      url: http://localhost/
+      return_content: yes
+    register: foo
+  - debug: msg='{{ foo.content }}'
+  
+  - name: HAProxy Request 3
+    uri:
+      url: http://localhost/
+      return_content: yes
+    register: foo
+  - debug: msg='{{ foo.content }}'
+
+
+  - name: snmp request -1
+    shell:  "snmpwalk -t 1 -r 1 -v2c -c public localhost:1611 iso.3.6.1.2.1.1.1.0"
+    register: "output"
+  - debug: var=output.stdout_lines
+
+  - name: snmp request -1
+    shell:  "snmpwalk -t 1 -r 1 -v2c -c public localhost:1611 iso.3.6.1.2.1.1.1.0"
+    register: "output"
+  - debug: var=output.stdout_lines
+
+  - name: snmp request -1
+    shell:  "snmpwalk -t 1 -r 1 -v2c -c public localhost:1611 iso.3.6.1.2.1.1.1.0"
+    register: "output"
+  - debug: var=output.stdout_lines
+ 
+
+  
+
+

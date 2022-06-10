@@ -1,0 +1,148 @@
+
+- name: apt update
+  apt:
+    update_cache: yes
+
+- name: install pip3
+  apt:
+    name: python3-pip
+    state: latest
+
+- name: installing flask
+  pip:
+    executable: pip3
+    name: flask
+    state: latest
+
+- name: Install required system packages
+  apt:
+    pkg:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - python3-pip
+      - virtualenv
+      - python3-setuptools
+      - snmp
+      - snmp-mibs-downloader
+    state: latest
+    update_cache: true
+
+- name: install snmpd
+  apt:
+    name: snmpd
+    state: latest
+
+- name: install nginx
+  apt:
+    name: nginx
+    state: latest
+
+- name: start nginx
+  service:
+    name: nginx
+    state: started
+  become: yes
+
+- name: copy the nginx config file and restart nginx
+  copy:
+    src: "{{ role_path }}/files/nginx.conf"
+    dest: /etc/nginx/sites-available/default
+
+- name: enable nginx
+  service:
+    name: nginx
+    state: restarted
+
+- name: configure snmpd
+  copy:
+    src: "{{role_path}}/files/snmpd.conf"
+    dest: /etc/snmp/snmpd.conf
+
+- name: start snmp
+  service:
+    name: snmpd
+    state: restarted 
+  become: yes
+- name: Install Docker
+  ansible.builtin.shell: cd ~ && curl -fsSL https://get.docker.com -o get-docker.sh && sudo sh get-docker.sh
+
+- name: pip install docker
+  pip:
+    executable: pip3
+    name: docker
+    state: latest
+
+- name: create a directory named web
+  file:
+    path: /home/ubuntu/web
+    state: directory
+
+- name: copy Dockerfile
+  copy:
+    src: "{{ role_path }}/files/Dockerfile"
+    dest: /home/ubuntu/web
+
+- name: Change file ownership, group and permissions
+  ansible.builtin.file:
+    path: /home/ubuntu/web/Dockerfile
+    owner: root
+    group: root
+    mode: '0777'
+
+- name: copy app.ini
+  copy:
+    src: "{{ role_path }}/files/app.ini"
+    dest: /home/ubuntu/web
+
+- name: copy nginx conf file
+  copy:
+    src: "{{ role_path }}/files/nginx.conf"
+    dest: /home/ubuntu/web
+
+- name: copy req file
+  copy:
+    src: "{{ role_path }}/files/requirements.txt"
+    dest: /home/ubuntu/web
+
+- name: copy app.py
+  copy:
+    src: "{{ role_path }}/files/app.py"
+    dest: /home/ubuntu/web
+
+- name: copy start
+  copy:
+    src: "{{ role_path }}/files/start.sh"
+    dest: /home/ubuntu/web
+
+- name: Build docker image
+  docker_image:
+    name: flask
+    build:
+      pull: yes
+      path: /home/ubuntu/web
+    state: present
+    source: build
+
+- name: launch docker container
+  docker_container:
+    name: flask
+    image: flask
+    state: started
+    ports:
+      - 8008:4000
+  register: docker_info
+
+- name: install req.txt
+  pip:
+    requirements: /home/ubuntu/web/requirements.txt
+
+- name: run flask app
+  shell: "(cd web; python3 app.py >/dev/null 2>&1 &)"
+  async: 10
+  poll: 0
+
+
+  
+ 
+

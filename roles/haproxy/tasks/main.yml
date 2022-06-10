@@ -1,0 +1,37 @@
+
+- name: apt update
+  apt:
+    update_cache: yes
+    
+- name: Install haproxy
+  apt:
+    name: haproxy
+    state: present
+    
+- name: configure haproxy
+  template:
+    src: templates/haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+    
+- name: restart haproxy
+  service:
+    name: haproxy
+    state: restarted
+    
+- name: install nginx
+  apt:
+    name: nginx
+    state: latest
+    
+- name: configure nginx
+  template:
+    src: templates/nginx.conf
+    dest: /etc/nginx/nginx.conf
+    
+- name: restart nginx
+  service:
+    name: nginx
+    state: restarted
+    
+- name: install snmp
+  apt: name=snmp state=latest
